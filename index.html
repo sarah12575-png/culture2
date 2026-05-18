@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전국 어린이 놀이시설 안내</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        .loading { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>🏢 지역별 어린이 놀이시설 통계</h1>
+    <p>행정안전부 통계연보 데이터를 실시간으로 조회합니다.</p>
+    <div id="content">
+        <p class="loading">데이터를 불러오는 중입니다...</p>
+    </div>
+
+    <script>
+        async function fetchPlayFacilities() {
+            try {
+                const response = await fetch('/api/data');
+                const result = await response.json();
+                
+                // 공공데이터 JSON 구조에 맞춰 접근 (items.item 또는 row)
+                const data = result.ChildrensPlayFacilitiesRegion?.[1]?.row || [];
+                
+                if (data.length === 0) {
+                    document.getElementById('content').innerHTML = '데이터가 없습니다.';
+                    return;
+                }
+
+                let html = '<table><thead><tr><th>지역</th><th>합계</th><th>주택단지</th><th>도시공원</th><th>어린이집</th></tr></thead><tbody>';
+                data.forEach(item => {
+                    html += `<tr>
+                        <td>${item.ctprvn_nm || '전체'}</td>
+                        <td>${item.sum_co}</td>
+                        <td>${item.house_distr_co}</td>
+                        <td>${item.cty_park_co}</td>
+                        <td>${item.daycare_center_co}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                document.getElementById('content').innerHTML = '<p style="color:red;">데이터 로드 중 오류가 발생했습니다.</p>';
+                console.error(error);
+            }
+        }
+        fetchPlayFacilities();
+    </script>
+</body>
+</html>
